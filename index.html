@@ -179,6 +179,7 @@ th {
         partners.add({ netid: this.user.split("@")[0] });
         let data = {
             assignment: assignment,
+            course: 'cos326-f22',
             users: Array.from(partners).map(partner => partner.netid + "@princeton.edu"),
         };
         let response = await fetch(url, {
@@ -207,13 +208,13 @@ th {
           let me = await response.json();
           this.user = me["login"];
           this.githubUser = me["github"];
-          response = await fetch(baseUrl + "/get?keys=cos326/enrollments.json", {
+          response = await fetch(baseUrl + "/get?keys=cos326-f22/enrollments.json", {
             method: 'GET',
             headers: new Headers({
                 'Authorization': 'Bearer ' + this.jwt
             }),
           });
-          this.enrollments = JSON.parse((await response.json())["cos326/enrollments.json"]);
+          this.enrollments = JSON.parse((await response.json())["cos326-f22/enrollments.json"]);
         }
       },
       login: function() {
@@ -225,19 +226,22 @@ th {
         this.githubPopup = window.open(baseUrl + "/login/github", "Login", "popup");
       },
       getAssignments: async function() {
-        let response = await fetch(baseUrl + "/get?keys=cos326/assignments", {
+        let response = await fetch(baseUrl + "/get?keys=cos326-f22/assignments", {
           method: 'GET',
           headers: new Headers({
               'Authorization': 'Bearer ' + this.jwt
           }),
         });
         let now = new Date();
-        let baseAssignments = Object.fromEntries(Object.entries((await response.json())).map(([k,v]) => [k, JSON.parse(v)]))["cos326/assignments"];
+        let baseAssignments = Object.fromEntries(Object.entries((await response.json())).map(([k,v]) => [k, JSON.parse(v)]))["cos326-f22/assignments"];
         let keys = Object.entries(baseAssignments)
         if (window.location.search != "?prerelease") {
           keys = keys.filter(([k,v]) => now >= new Date(v["release_date"]));
         }
-        keys = keys.map(([key, v]) =>  "cos326/assignments/" + key + "/" + this.user);
+        keys = keys.map(([key, v]) =>  "cos326-f22/assignments/" + key + "/" + this.user);
+        if (keys.length == 0) {
+          return;
+        }
         let url = new URL(baseUrl);
         url.pathname = "/get";
         url.searchParams.append("keys", keys);;
@@ -249,7 +253,7 @@ th {
         });
         let result = await response.json();
         result = Object.fromEntries(Object.entries(result).map(([k, v]) => {
-            k = k.match(/cos326\/assignments\/([^/]+)\/.*/)[1];
+            k = k.match(/cos326-f22\/assignments\/([^/]+)\/.*/)[1];
             let val = {
                 repo: v ? "https://github.com/" + v : null,
                 assignment: baseAssignments[k]
